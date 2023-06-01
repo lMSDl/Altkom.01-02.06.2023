@@ -1,10 +1,15 @@
-﻿using ConsoleApp.Config.Models;
+﻿using ConsoleApp;
+using ConsoleApp.Config.Models;
 using ConsoleApp.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
+IConfiguration config = new ConfigurationBuilder()
+                .AddJsonFile("Config/config.json")
+                .Build() ;
 
 
 var serviceCollection = new ServiceCollection();
@@ -23,39 +28,29 @@ serviceCollection.AddSingleton<IFontService, KeyboardSmallFontService>();
 serviceCollection.AddSingleton<ConsoleOutput>();
 serviceCollection.AddTransient<IOutputService>(provider => provider.GetService<ConsoleOutput>()!);
 
+serviceCollection.AddLogging(options => options.AddConfiguration(config.GetSection("Logging"))
+                                               //.SetMinimumLevel(LogLevel.Debug)
+                                               .ClearProviders()
+                                               .AddConsole(/*x => x.IncludeScopes = true*/)
+                                               .AddDebug()
+                                               .AddEventLog());
+
+serviceCollection.AddTransient<LoggerDemo>();
+
 
 var serviceProvider = serviceCollection.BuildServiceProvider();
 
-serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
-serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
-serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
-serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
 
-IOutputService output = serviceProvider.GetService<IOutputService>()!;
+var logger = serviceProvider.GetService<ILogger<Program>>();
 
-output.WriteText("Hello!");
-
-using (var scope = serviceProvider.CreateScope())
-{
-
-    output = scope.ServiceProvider.GetService<IOutputService>()!;
-
-    output.WriteText("Hello!");
-
-    int counter = 0;
-    foreach (var service in scope.ServiceProvider.GetServices<IOutputService>())
-    {
-        service.WriteText((++counter).ToString());
-    }
-}
-
-using (var scope = serviceProvider.CreateScope())
-{
-    output = scope.ServiceProvider.GetService<IOutputService>()!;
-    output.WriteText("Hello!");
-}
+logger.LogInformation("Hello World!");
+logger.LogDebug("Debug...");
 
 
+serviceProvider.GetService<LoggerDemo>().Work();
+
+
+DependencyInjection(serviceProvider);
 
 Console.ReadLine();
 
@@ -151,4 +146,36 @@ static void Configuration()
 
     Console.WriteLine(config["tmp"]);
     Console.WriteLine(config["bAjKa"]);
+}
+
+static void DependencyInjection(ServiceProvider serviceProvider)
+{
+    serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
+    serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
+    serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
+    serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
+
+    IOutputService output = serviceProvider.GetService<IOutputService>()!;
+
+    output.WriteText("Hello!");
+
+    using (var scope = serviceProvider.CreateScope())
+    {
+
+        output = scope.ServiceProvider.GetService<IOutputService>()!;
+
+        output.WriteText("Hello!");
+
+        int counter = 0;
+        foreach (var service in scope.ServiceProvider.GetServices<IOutputService>())
+        {
+            service.WriteText((++counter).ToString());
+        }
+    }
+
+    using (var scope = serviceProvider.CreateScope())
+    {
+        output = scope.ServiceProvider.GetService<IOutputService>()!;
+        output.WriteText("Hello!");
+    }
 }

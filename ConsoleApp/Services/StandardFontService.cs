@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,9 +9,9 @@ namespace ConsoleApp.Services
 {
     internal class StandardFontService : IFontService
     {
-        public StandardFontService()
+        public StandardFontService(ILogger<StandardFontService> logger)
         {
-            Console.WriteLine(GetType().Name);
+            logger.LogInformation(GetType().Name);
         }
 
         public string Render(string input)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,9 +10,8 @@ namespace ConsoleApp.Services
     internal class ConsoleRandomFontOutput : ConsoleOutput
     {
 
-        public ConsoleRandomFontOutput(IEnumerable<IFontService> fontServices) : base(fontServices.ToList()[new Random().Next(0, fontServices.Count())])
+        public ConsoleRandomFontOutput(IEnumerable<IFontService> fontServices, ILogger<ConsoleRandomFontOutput> logger) : base(fontServices.ToList()[new Random().Next(0, fontServices.Count())], logger)
         {
-            Console.WriteLine(GetType().Name);
         }
     }
 }

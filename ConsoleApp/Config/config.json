@@ -8,5 +8,26 @@
             "From": "Json",
             "To": "Paul"
         }
+    },
+    "Logging": {
+        "LogLevel": {
+            "Default": "debug"
+        },
+        "Console": {
+            "LogLevel": {
+                "Default": "trace"
+            },
+            "IncludeScopes": true
+        },
+        "EventLog": {
+            "LogLevel": {
+                "Default": "information"
+            }
+        },
+        "Debug": {
+            "LogLevel": {
+                "Default": "error"
+            }
+        }
     }
 }

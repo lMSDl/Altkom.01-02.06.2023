@@ -1,4 +1,11 @@
 <config>
     <HelloXml>XML</HelloXml>
 	<Count>5</Count>
+	<Greetings>
+		<Value>Hi</Value>
+		<Targets>
+			<From>XML</From>
+			<To>Tom</To>
+		</Targets>
+	</Greetings>
 </config>

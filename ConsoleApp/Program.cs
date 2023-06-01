@@ -23,6 +23,10 @@ IConfiguration config = new ConfigurationBuilder()
             .Build();
 
 
+var greetigsSection = config.GetSection("Greetings");
+var targetsSection = greetigsSection.GetSection("Targets");
+Console.WriteLine($"{greetigsSection["Value"]} from {targetsSection["From"]} to {config["Greetings:Targets:To"]}");
+
 
 for (int i = 0; i < int.Parse(config["Count"]); i++)
 {

@@ -1,66 +1,61 @@
 ﻿using ConsoleApp.Config.Models;
+using ConsoleApp.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
 
 
-//Microsoft.Extensions.Configuration
-IConfiguration config = new ConfigurationBuilder()
-
-            //Microsoft.Extensions.Configuration.Xml
-            .AddXmlFile("Config/config.xml")
-
-            //Microsoft.Extensions.Configuration.Ini
-            .AddIniFile("Config/config.ini")
-
-            //NetEscapades.Configuration.Yaml
-            .AddYamlFile("Config/config.yaml", optional: true, reloadOnChange: true)
-
-            //Microsoft.Extensions.Configuration.Json
-            .AddJsonFile("Config/config.json", optional: true)
-
-            //Microsoft.Extensions.Configuration.EnvironmentVariables
-            .AddEnvironmentVariables()
-
-            //w przypadku powtarzających się kluczy, zastosowanie ma ten ostatnio załadowany
-            .Build();
+var serviceCollection = new ServiceCollection();
 
 
-var greetigsSection = config.GetSection("Greetings");
-var targetsSection = greetigsSection.GetSection("Targets");
-Console.WriteLine($"{greetigsSection["Value"]} from {targetsSection["From"]} to {config["Greetings:Targets:To"]}");
+serviceCollection.AddTransient<IOutputService>(provider => new DebugOutput());
+
+//transient - zawsze nowa instancja
+serviceCollection.AddTransient<IOutputService, ConsoleRandomFontOutput>();
+//scoped - instacja wytwarzana dla każdego nowego scope
+serviceCollection.AddScoped<IFontService, StandardFontService>();
+//singleton - instancja tworzona tylko raz
+serviceCollection.AddSingleton<IFontService, KeyboardSmallFontService>();
 
 
-var greetings = new Greetings();
-//Microsoft.Extensions.Configuration.Binder
-greetigsSection.Bind(greetings);
+serviceCollection.AddSingleton<ConsoleOutput>();
+serviceCollection.AddTransient<IOutputService>(provider => provider.GetService<ConsoleOutput>()!);
 
-for (int i = 0; i < greetings.Repeat; i++)
+
+var serviceProvider = serviceCollection.BuildServiceProvider();
+
+serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
+serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
+serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
+serviceProvider.GetService<ConsoleOutput>()!.WriteText("abc");
+
+IOutputService output = serviceProvider.GetService<IOutputService>()!;
+
+output.WriteText("Hello!");
+
+using (var scope = serviceProvider.CreateScope())
 {
-    Console.WriteLine($"{greetings.Value} from {greetings.Targets.From} to {greetings.Targets.To}");
+
+    output = scope.ServiceProvider.GetService<IOutputService>()!;
+
+    output.WriteText("Hello!");
+
+    int counter = 0;
+    foreach (var service in scope.ServiceProvider.GetServices<IOutputService>())
+    {
+        service.WriteText((++counter).ToString());
+    }
 }
 
-greetings = config.GetSection(nameof(Greetings)).Get<Greetings>();
-Console.WriteLine($"{greetings.Value} from {greetings.Targets.From} to {greetings.Targets.To}");
-
-
-//for (int i = 0; i < int.Parse(config["Count"]); i++)
-for (int i = 0; i < config.GetValue<int>("Count"); i++)
+using (var scope = serviceProvider.CreateScope())
 {
-
-    Console.WriteLine($"Hello, {config["HelloJson"]}");
-    Console.WriteLine($"Hello, {config["HelloXml"]}");
-    Console.WriteLine($"Hello, {config["HelloIni"]}");
-    Console.WriteLine($"Hello, {config["HelloYaml"]}");
-
-    Console.ReadLine();
-
+    output = scope.ServiceProvider.GetService<IOutputService>()!;
+    output.WriteText("Hello!");
 }
 
 
-Console.WriteLine(config["tmp"]);
-Console.WriteLine(config["bAjKa"]);
 
 Console.ReadLine();
 
@@ -96,4 +91,64 @@ static void Introduction()
     //       }
     //    }
     //}
+}
+
+static void Configuration()
+{
+    //Microsoft.Extensions.Configuration
+    IConfiguration config = new ConfigurationBuilder()
+
+                //Microsoft.Extensions.Configuration.Xml
+                .AddXmlFile("Config/config.xml")
+
+                //Microsoft.Extensions.Configuration.Ini
+                .AddIniFile("Config/config.ini")
+
+                //NetEscapades.Configuration.Yaml
+                .AddYamlFile("Config/config.yaml", optional: true, reloadOnChange: true)
+
+                //Microsoft.Extensions.Configuration.Json
+                .AddJsonFile("Config/config.json", optional: true)
+
+                //Microsoft.Extensions.Configuration.EnvironmentVariables
+                .AddEnvironmentVariables()
+
+                //w przypadku powtarzających się kluczy, zastosowanie ma ten ostatnio załadowany
+                .Build();
+
+
+    var greetigsSection = config.GetSection("Greetings");
+    var targetsSection = greetigsSection.GetSection("Targets");
+    Console.WriteLine($"{greetigsSection["Value"]} from {targetsSection["From"]} to {config["Greetings:Targets:To"]}");
+
+
+    var greetings = new Greetings();
+    //Microsoft.Extensions.Configuration.Binder
+    greetigsSection.Bind(greetings);
+
+    for (int i = 0; i < greetings.Repeat; i++)
+    {
+        Console.WriteLine($"{greetings.Value} from {greetings.Targets.From} to {greetings.Targets.To}");
+    }
+
+    greetings = config.GetSection(nameof(Greetings)).Get<Greetings>();
+    Console.WriteLine($"{greetings.Value} from {greetings.Targets.From} to {greetings.Targets.To}");
+
+
+    //for (int i = 0; i < int.Parse(config["Count"]); i++)
+    for (int i = 0; i < config.GetValue<int>("Count"); i++)
+    {
+
+        Console.WriteLine($"Hello, {config["HelloJson"]}");
+        Console.WriteLine($"Hello, {config["HelloXml"]}");
+        Console.WriteLine($"Hello, {config["HelloIni"]}");
+        Console.WriteLine($"Hello, {config["HelloYaml"]}");
+
+        Console.ReadLine();
+
+    }
+
+
+    Console.WriteLine(config["tmp"]);
+    Console.WriteLine(config["bAjKa"]);
 }

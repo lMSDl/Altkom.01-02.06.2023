@@ -3,6 +3,7 @@
     "Count": 3,
     "Greetings": {
         "Value": "Hello",
+        "Repeat": 2,
         "Targets": {
             "From": "Json",
             "To": "Paul"

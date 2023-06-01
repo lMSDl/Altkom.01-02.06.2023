@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using ConsoleApp.Config.Models;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Diagnostics.CodeAnalysis;
 
@@ -19,6 +20,9 @@ IConfiguration config = new ConfigurationBuilder()
             //Microsoft.Extensions.Configuration.Json
             .AddJsonFile("Config/config.json", optional: true)
 
+            //Microsoft.Extensions.Configuration.EnvironmentVariables
+            .AddEnvironmentVariables()
+
             //w przypadku powtarzających się kluczy, zastosowanie ma ten ostatnio załadowany
             .Build();
 
@@ -28,7 +32,21 @@ var targetsSection = greetigsSection.GetSection("Targets");
 Console.WriteLine($"{greetigsSection["Value"]} from {targetsSection["From"]} to {config["Greetings:Targets:To"]}");
 
 
-for (int i = 0; i < int.Parse(config["Count"]); i++)
+var greetings = new Greetings();
+//Microsoft.Extensions.Configuration.Binder
+greetigsSection.Bind(greetings);
+
+for (int i = 0; i < greetings.Repeat; i++)
+{
+    Console.WriteLine($"{greetings.Value} from {greetings.Targets.From} to {greetings.Targets.To}");
+}
+
+greetings = config.GetSection(nameof(Greetings)).Get<Greetings>();
+Console.WriteLine($"{greetings.Value} from {greetings.Targets.From} to {greetings.Targets.To}");
+
+
+//for (int i = 0; i < int.Parse(config["Count"]); i++)
+for (int i = 0; i < config.GetValue<int>("Count"); i++)
 {
 
     Console.WriteLine($"Hello, {config["HelloJson"]}");
@@ -40,6 +58,11 @@ for (int i = 0; i < int.Parse(config["Count"]); i++)
 
 }
 
+
+Console.WriteLine(config["tmp"]);
+Console.WriteLine(config["bAjKa"]);
+
+Console.ReadLine();
 
 
 
